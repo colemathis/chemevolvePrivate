@@ -81,8 +81,8 @@ def create_concentration_files_old(file_prefix, N_L, molecules, concentrations, 
 	with open(file_prefix+ '_molecules.txt', 'wb') as f:
 		pickle.dump(molecule_list, f)
 
-def create_concentration_files(file_prefix, N_L, molecules, concentrations, coordinates, dimensions = 2):
-	'''Create a concentration file to load as a np array
+def create_concentration_array(file_prefix, N_L, molecules, concentrations, coordinates, dimensions = 2):
+	'''Create a concentration file to return as a np array
 	dimensions - int, number of spatial dimensions
 	N_L - int, size of one side of regular lattice
 	molecules - list of strings representing molecules
