@@ -20,10 +20,10 @@ def standard_propensity(rxn, CRS, concentrations):
 	catalyzed_constants = rxn.catalyzed_constants
 
 	#Calculate Propensity
-	Ap = 1.0 #rxn.constant #*np.prod( np.power(reactant_concentrations, reactant_coeff) )
+	Ap = rxn.constant #*np.prod( np.power(reactant_concentrations, reactant_coeff) )
 	num_reactants = len(reactant_concentrations)
 	for i in range(num_reactants):
-		Ap = Ap*np.power(rxn.constant*reactant_concentrations[i],reactant_coeff[i])
+		Ap = Ap*np.power(reactant_concentrations[i],reactant_coeff[i])
 	
 	# Ap = rxn.constant
 	#Ap = Ap*np.prod(std_propensity_helper1(reactant_concentrations, reactant_coeff))
@@ -114,16 +114,16 @@ def replicator_composition_propensity_envMutation(rxn, CRS, concentrations, mu =
 	    
 	    for eA in range(0, nA + 1):
 	        #Here eA is the number of errors in copying A-residues
-	        binomialA = (math.factorial(nA)/(math.factorial(nA - eA)*math.factorial(eA)))*pow(rxn.constant*reactant_concentrations[0], nA - eA)*pow(rxn.constant*reactant_concentrations[1], eA)  #calculates number of sequences with eA errors in copying A and the resource contribution to these sequences
+	        binomialA = (math.factorial(nA)/(math.factorial(nA - eA)*math.factorial(eA)))*pow(reactant_concentrations[0], nA - eA)*pow(reactant_concentrations[1], eA)  #calculates number of sequences with eA errors in copying A and the resource contribution to these sequences
 
 	        for eB in range(0, nB + 1):
 	            # Here eB is the number of errors in copying B-residues
 	            if eA == 0 and eB == 0:
 	                # Keeps perfect copying probability seperate from copies made with errors
-	                q_p = pow(1 - mu, R_L)*pow(rxn.constant*reactant_concentrations[0], nA)*pow(rxn.constant*reactant_concentrations[1], nB)
+	                q_p = pow(1 - mu, R_L)*pow(reactant_concentrations[0], nA)*pow(reactant_concentrations[1], nB)
 	                
 	            else:
-	                binomialB = (math.factorial(nB)/(math.factorial(nB - eB)*math.factorial(eB)))*pow(rxn.constant*reactant_concentrations[1], nB - eB)*pow(rxn.constant*reactant_concentrations[0], eB) #adds number of mutants with eB B-errors
+	                binomialB = (math.factorial(nB)/(math.factorial(nB - eB)*math.factorial(eB)))*pow(reactant_concentrations[1], nB - eB)*pow(reactant_concentrations[0], eB) #adds number of mutants with eB B-errors
 	                
 	                q_error += pow(mu, eA + eB)*pow(1 - mu, R_L - eA - eB)*binomialA*binomialB
 
@@ -131,7 +131,7 @@ def replicator_composition_propensity_envMutation(rxn, CRS, concentrations, mu =
 	    q_p = pow(sequences[ID].kr*monomers['A'].tot_count, nA)*pow(sequences[ID].kr*monomers['B'].tot_count, nB)
 	    q_error = 0
 
-	Ap = (q_p + q_error)*replicator_concentration 
+	Ap = Ap*(q_p + q_error)*replicator_concentration 
 
 	
 	return Ap

@@ -63,9 +63,13 @@ def pick_reaction(dice_roll, CRS, concentrations, **kwargs):
 			# print 'Product ID numbers: ',rxn.products
 			checkpoint += Propensity.standard_propensity(rxn, CRS, concentrations)
 			#print "dice_roll: ", dice_roll, ' checkpoint: ', checkpoint
-			if checkpoint >= dice_roll:
-				break
 			
+		elif rxn.prop == 'RCM':
+			mu = kwargs['mu']
+			checkpoint += Propensity.replicator_composition_propensity_envMutation(rxn, CRS, concentrations, mu = mu)
+				
+		if checkpoint >= dice_roll:
+				break
 		
 	#raw_input("Enter")
 	return rxn
