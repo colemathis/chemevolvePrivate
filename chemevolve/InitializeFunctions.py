@@ -124,7 +124,7 @@ def create_concentration_array(file_prefix, N_L, molecules, concentrations, coor
 	# outfile1.close()
 	# with open(file_prefix+ '_molecules.txt', 'wb') as f:
 	# 	pickle.dump(molecule_list, f)
-	return(concentrations)
+	return(concentration_arr)
 
 
 def convert_CRS_to_npArrays(CRS):
