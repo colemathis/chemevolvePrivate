@@ -28,6 +28,7 @@ def tidy_timeseries(molecules,prefix, delete_dat = True):
 	import glob
 	import pickle
 	import os
+	import re
 
 	# Get the moleucles list 
 	# with open(prefix+ '_molecules.txt', 'rb') as f:
@@ -52,6 +53,7 @@ def tidy_timeseries(molecules,prefix, delete_dat = True):
 		infile1.close()
 		concentrations = np.array(file1)
 		t =f.replace('.dat', '')
+		t =re.findall(r'[+-]?[0-9.]+', t)[-1]
 		#print t
 		t =t.replace(ts_prefix, '')
 		# The time value is embedded in the filename
