@@ -118,13 +118,13 @@ def create_concentration_array(file_prefix, N_L, molecules, concentrations, coor
 	#print molecule_list
 	#print concentration_arr
 	#np.save(file_prefix+ '_concentrations.npy', concentration_arr)
-	fname = file_prefix+ '_concentrations.dat'
-	outfile1 = open(fname, 'w+b')
-	pickle.dump(concentration_arr.tolist(), outfile1)
-	outfile1.close()
-	with open(file_prefix+ '_molecules.txt', 'wb') as f:
-		pickle.dump(molecule_list, f)
-
+	# fname = file_prefix+ '_concentrations.dat'
+	# outfile1 = open(fname, 'w+b')
+	# pickle.dump(concentration_arr.tolist(), outfile1)
+	# outfile1.close()
+	# with open(file_prefix+ '_molecules.txt', 'wb') as f:
+	# 	pickle.dump(molecule_list, f)
+	return(concentrations)
 
 
 def convert_CRS_to_npArrays(CRS):
