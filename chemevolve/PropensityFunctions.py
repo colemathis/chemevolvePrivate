@@ -158,9 +158,10 @@ def calculate_propensities(CRS, concentrations, **kwargs):
 	# Iterate over each lattice site. Site is the propensity and index gives its location
 	for site_index, site_Ap in np.ndenumerate(propensity_arr):
 		(x,y) = site_index
+		site_Ap = 0.0
 		# Iterate over each reactation
 		for rxn in CRS.reactions:
-
+			Ap = 0.0
 			if rxn.prop == 'STD':
 				Ap = standard_propensity(rxn, CRS, concentrations[site_index])
 				
@@ -171,6 +172,9 @@ def calculate_propensities(CRS, concentrations, **kwargs):
 			elif rxn.prop == 'RM8':
 				mu = kwargs['mu']
 				Ap = replicator_composition_propensity_envMutation8(rxn, CRS, concentrations[site_index], mu = mu)
+			elif rxn.prop == 'RM1':
+				mu = kwargs['mu']
+				Ap = replicator_composition_propensity_envMutation1(rxn, CRS, concentrations[site_index], mu = mu)
 
 			elif rxn.prop[:2] == 'MM':
 				expon = int(rxn.prop[2])
@@ -284,8 +288,63 @@ def replicator_composition_propensity_envMutation2(rxn, CRS, concentrations, mu 
 	                q_p = pow(1 - mu, R_L)*(reactant_concentrations[0]*nA)*(reactant_concentrations[1]*nB)
 	                
 	            else:
-	                binomialB = (math.factorial(nB)/(math.factorial(nB - eB)*math.factorial(eB)))*(reactant_concentrations[1]*(nB - eB))*(reactant_concentrations[0]*eB) #adds number of mutants with eB B-errors
+	                binomialB = (math.factorial(nB)/(math.factorial(nB - eB)*math.factorial(eB))) #adds number of mutants with eB B-errors
 	                q_error += pow(mu, eA + eB)*pow(1 - mu, R_L - eA - eB)*binomialA*binomialB*( reactant_concentrations[0]*(nA - eA +eB)*reactant_concentrations[1]*(nB - eB + eA ) )
+
+	elif mu == 0:
+		q_p = pow(1 - mu, R_L)*(reactant_concentrations[0]*nA)*(reactant_concentrations[1]*nB)
+		q_error = 0
+
+	Ap = Ap*(q_p + q_error)*replicator_concentration 
+
+	
+	return Ap
+
+def replicator_composition_propensity_envMutation1(rxn, CRS, concentrations, mu = 0.001):
+	''' Replication Propensity function calculates propensity as the concentrations of the replicator and the composition of the enivornment 
+		This propensity function calcuates the mutation propensity as a function of the resources availible
+	Arguements:
+		- rxn: Reaction object
+		- CRS: CRS object for system
+		- concentrations: list of molecule concentrations indexed by ID
+
+	Return:
+		- Ap: float, propensity of rxn given the current concentrations
+
+	'''
+	#from ReplicatorFunctions import get_composition
+
+	# Get data out of rxn and concentration objects
+	reactant_concentrations = concentrations[rxn.reactants]
+	replicator_concentration = concentrations[rxn.products]
+	reactant_coeff = rxn.reactant_coeff
+
+	#catalyzed_constants = rxn.catalyzed_constants
+
+	#Calculate Propensity
+	Ap = rxn.constant 
+
+	nA = reactant_coeff[0] # If you're reading this you should confirm that 'A' is stored at index 0
+	nB = reactant_coeff[1] # If you're reading this you should confirm that 'B' is stored at index 1
+	R_L = nA + nB
+	if mu != 0:
+
+	    binomialA = 0    #Used for calculating the contribution from copying A-residues
+	    binomialB = 0   #Used for calculating the intermediate of contribution from copying A-residues and B-residues
+	    q_error = 0.0
+	    
+	    for eA in range(0, nA + 1):
+	        #Here eA is the number of errors in copying A-residues
+	        binomialA = (math.factorial(nA)/(math.factorial(nA - eA)*math.factorial(eA)))
+	        for eB in range(0, nB + 1):
+	            # Here eB is the number of errors in copying B-residues
+	            if eA == 0 and eB == 0:
+	                # Keeps perfect copying probability seperate from copies made with errors
+	                q_p = pow(1 - mu, R_L)*(reactant_concentrations[0]*nA)*(reactant_concentrations[1]*nB)
+	                
+	            else:
+	                binomialB = (math.factorial(nB)/(math.factorial(nB - eB)*math.factorial(eB))) #adds number of mutants with eB B-errors
+	                q_error += pow(mu, eA + eB)*pow(1 - mu, R_L - eA - eB)*binomialA*binomialB*( (reactant_concentrations[0]*(nA - eA +eB))  + (reactant_concentrations[1]*(nB - eB + eA) ) )
 
 	elif mu == 0:
 		q_p = pow(1 - mu, R_L)*(reactant_concentrations[0]*nA)*(reactant_concentrations[1]*nB)

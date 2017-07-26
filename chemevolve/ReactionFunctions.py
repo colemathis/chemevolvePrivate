@@ -83,6 +83,14 @@ def pick_reaction(dice_roll, CRS, concentrations, **kwargs):
 				rxn = pick_replicator2(mutation_dice, rxn,CRS, concentrations, mu)
 				#print CRS.molecule_list[rxn.products[0]]
 				break
+		elif rxn.prop == 'RM1':
+			mu = kwargs['mu']
+			checkpoint += Propensity.replicator_composition_propensity_envMutation2(rxn, CRS, concentrations, mu = mu)
+			if checkpoint >= dice_roll:
+				mutation_dice = random.random()*Propensity.replicator_composition_propensity_envMutation2(rxn, CRS, concentrations, mu = mu)
+				rxn = pick_replicator2(mutation_dice, rxn,CRS, concentrations, mu)
+				#print CRS.molecule_list[rxn.products[0]]
+				break
 		elif rxn.prop[:2] == 'MM':
 			expon = int(rxn.prop[2])
 			kcat = 10**expon
@@ -300,9 +308,103 @@ def pick_replicator2(dice_roll, rxn, CRS, concentrations, mu = 0.001):
 				q_p = pow(1 - mu, R_L)*(reactant_concentrations[0]*nA)*(reactant_concentrations[1]*nB)
 				checkpoint += rxn.constant*q_p*replicator_concentration
 			else:
-				binomialB = (math.factorial(nB)/(math.factorial(nB - eB)*math.factorial(eB)))*(reactant_concentrations[1]*(nB - eB))*(reactant_concentrations[0]*eB) #adds number of mutants with eB B-errors
-	            q_error = pow(mu, eA + eB)*pow(1 - mu, R_L - eA - eB)*binomialA*binomialB*( reactant_concentrations[0]*(nA - eA +eB)*reactant_concentrations[1]*(nB - eB + eA ) )
+				binomialB = (math.factorial(nB)/(math.factorial(nB - eB)*math.factorial(eB))) #adds number of mutants with eB B-errors
+				q_error = pow(mu, eA + eB)*pow(1 - mu, R_L - eA - eB)*binomialA*binomialB*( reactant_concentrations[0]*(nA - eA +eB)*reactant_concentrations[1]*(nB - eB + eA ) )
+				checkpoint += rxn.constant*q_error*replicator_concentration
+			if checkpoint >= dice_roll:
+				A_errors = eA
+				B_errors = eB 
+				seq_found = True
+				break
+		# 	print "eA, eB: ", eA, eB
+		# print "checkpoint: ", checkpoint
 
+
+	Astring = 'B'*A_errors + 'A'*(nA - A_errors)
+	Bstring = 'A'*B_errors + 'B'*(nB - B_errors)
+
+	Alist = list(Astring)
+	Blist = list(Bstring)
+
+	random.shuffle(Alist)
+	random.shuffle(Blist)
+
+	new_seq = ''
+	for i in range(R_L):
+	    if seq[i] == 'A':
+	        new_seq += Alist.pop()
+
+	    elif seq[i] == 'B':
+	        new_seq += Blist.pop()
+	Acount = new_seq.count('A')
+	Bcount = new_seq.count('B')
+
+	# print "Mutated Seq: ", new_seq
+	if (Acount != 0 and Acount > reactant_concentrations[0]) or (Bcount != 0 and Bcount > reactant_concentrations[1]):
+
+		print 'New check: Not enough food to replicate'
+		picked_rxn = Core.Reaction(-1,products = [0,1], product_coeff = [0,0], reactants =[0, 1], reactant_coeff = [0, 0], prop = 'RCM')
+
+	else:
+
+		new_seq_ID  = CRS.molecule_dict[new_seq]
+		picked_rxn  = Core.Reaction(-1,products = [new_seq_ID], product_coeff = [1], reactants =[0, 1], reactant_coeff = [Acount, Bcount], prop = 'RCM')
+	#raw_input("Enter")
+	return picked_rxn
+
+def pick_replicator1(dice_roll, rxn, CRS, concentrations, mu = 0.001):
+	'''Given a dice_roll and a replication reaction, determine the mutation outcome, return rxn object 
+	Arguements:
+		- dice_roll: random number between 0 and total mutation propensity
+		- rxn: original replication reaction
+		- CRS: CRS object
+		- concentrations: concentration array containing all replicators and monomer concentrations 
+		- mu: per-base mutation rate 
+	Return:
+		- picked_rxn: a Reaction object containing the new sequence to be produced and monomers to be consumed
+		 If not enough resources present to replicate, a null Reaction object is returned
+
+	'''
+
+	checkpoint = 0.0
+	seq_found = False
+	seq = CRS.molecule_list[rxn.products[0]]
+	# print "Copying seqeunce: ", seq
+	# print "Dice Roll: ", dice_roll
+	R_L = len(seq)
+	
+	reactant_concentrations = concentrations[rxn.reactants]
+	replicator_concentration = concentrations[rxn.products]
+	reactant_coeff = rxn.reactant_coeff
+	#catalyzed_constants = rxn.catalyzed_constants
+
+	#Calculate Propensity
+	Ap = rxn.constant 
+
+	nA = reactant_coeff[0] # If you're reading this you should confirm that 'A' is stored at index 0
+	nB = reactant_coeff[1] # If you're reading this you should confirm that 'B' is stored at index 1
+
+
+	binomialA = 0    #Used for calculating the contribution from copying A-residues
+	binomialB = 0   #Used for calculating the intermediate of contribution from copying A-residues and B-residues
+	q_error = 0.0
+
+	for eA in range(0, nA + 1):
+		
+		if seq_found == True:
+		    break
+
+		#Here eA is the number of errors in copying A-residues
+		binomialA = (math.factorial(nA)/(math.factorial(nA - eA)*math.factorial(eA)))
+		for eB in range(0, nB + 1):
+			# Here eB is the number of errors in copying B-residues
+			if eA == 0 and eB == 0:
+				# Keeps perfect copying probability seperate from copies made with errors   
+				q_p = pow(1 - mu, R_L)*(reactant_concentrations[0]*nA)*(reactant_concentrations[1]*nB)
+				checkpoint += rxn.constant*q_p*replicator_concentration
+			else:
+				binomialB = (math.factorial(nB)/(math.factorial(nB - eB)*math.factorial(eB))) #adds number of mutants with eB B-errors
+				q_error = pow(mu, eA + eB)*pow(1 - mu, R_L - eA - eB)*binomialA*binomialB*( (reactant_concentrations[0]*(nA - eA +eB)) + (reactant_concentrations[1]*(nB - eB + eA)) )
 				checkpoint += rxn.constant*q_error*replicator_concentration
 			if checkpoint >= dice_roll:
 				A_errors = eA
