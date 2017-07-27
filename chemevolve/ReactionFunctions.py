@@ -352,6 +352,7 @@ def pick_replicator2(dice_roll, rxn, CRS, concentrations, mu = 0.001):
 	#raw_input("Enter")
 	return picked_rxn
 
+####################################################
 def pick_replicator1(dice_roll, rxn, CRS, concentrations, mu = 0.001):
 	'''Given a dice_roll and a replication reaction, determine the mutation outcome, return rxn object 
 	Arguements:
@@ -391,20 +392,21 @@ def pick_replicator1(dice_roll, rxn, CRS, concentrations, mu = 0.001):
 
 	for eA in range(0, nA + 1):
 		
+		#Here eA is the number of errors in copying A-residues
 		if seq_found == True:
 		    break
 
-		#Here eA is the number of errors in copying A-residues
-		binomialA = (math.factorial(nA)/(math.factorial(nA - eA)*math.factorial(eA)))
+		binomialA = (math.factorial(nA)/(math.factorial(nA - eA)*math.factorial(eA)))*pow(reactant_concentrations[0], (nA - eA)/R_L )*pow(reactant_concentrations[1], eA/R_L)  #calculates number of sequences with eA errors in copying A and the resource contribution to these sequences
+
 		for eB in range(0, nB + 1):
 			# Here eB is the number of errors in copying B-residues
 			if eA == 0 and eB == 0:
 				# Keeps perfect copying probability seperate from copies made with errors   
-				q_p = pow(1 - mu, R_L)*(reactant_concentrations[0]*nA)*(reactant_concentrations[1]*nB)
+				q_p = pow(1 - mu, R_L)*pow(reactant_concentrations[0], nA/R_L)*pow(reactant_concentrations[1], nB/R_L)
 				checkpoint += rxn.constant*q_p*replicator_concentration
 			else:
-				binomialB = (math.factorial(nB)/(math.factorial(nB - eB)*math.factorial(eB))) #adds number of mutants with eB B-errors
-				q_error = pow(mu, eA + eB)*pow(1 - mu, R_L - eA - eB)*binomialA*binomialB*( (reactant_concentrations[0]*(nA - eA +eB)) + (reactant_concentrations[1]*(nB - eB + eA)) )
+				binomialB = (math.factorial(nB)/(math.factorial(nB - eB)*math.factorial(eB)))*pow(reactant_concentrations[1], (nB - eB)/R_L)*pow(reactant_concentrations[0], eB/R_L) #adds number of mutants with eB B-errors
+				q_error = pow(mu, eA + eB)*pow(1 - mu, R_L - eA - eB)*binomialA*binomialB
 				checkpoint += rxn.constant*q_error*replicator_concentration
 			if checkpoint >= dice_roll:
 				A_errors = eA

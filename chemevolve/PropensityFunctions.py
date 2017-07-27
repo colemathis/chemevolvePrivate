@@ -101,6 +101,9 @@ def sort_propensities(CRS, concentrations, **kwargs):
 			elif rxn.prop == 'RM2':
 				mu = kwargs['mu']
 				Ap = replicator_composition_propensity_envMutation2(rxn, CRS, concentrations[site_index], mu = mu)
+			elif rxn.prop == 'RM1':
+				mu = kwargs['mu']
+				Ap = replicator_composition_propensity_envMutation1(rxn, CRS, concentrations[site_index], mu = mu)
 			elif rxn.prop[:2] == 'MM':
 				expon = int(rxn.prop[2])
 				kcat = 10**expon
@@ -128,6 +131,10 @@ def sort_propensities(CRS, concentrations, **kwargs):
 		elif rxn.prop == 'RM8':
 			mu = kwargs['mu']
 			Ap = replicator_composition_propensity_envMutation8(rxn, CRS, concentrations[site_index], mu = mu)
+			Ap_rxns.append( (Ap, rxn))
+		elif rxn.prop == 'RM1':
+			mu = kwargs['mu']
+			Ap = replicator_composition_propensity_envMutation1(rxn, CRS, concentrations[site_index], mu = mu)
 			Ap_rxns.append( (Ap, rxn))
 
 		elif rxn.prop[:2] == 'MM':
@@ -326,7 +333,7 @@ def replicator_composition_propensity_envMutation1(rxn, CRS, concentrations, mu 
 
 	nA = reactant_coeff[0] # If you're reading this you should confirm that 'A' is stored at index 0
 	nB = reactant_coeff[1] # If you're reading this you should confirm that 'B' is stored at index 1
-	R_L = nA + nB
+	R_L = float(nA + nB)
 	if mu != 0:
 
 	    binomialA = 0    #Used for calculating the contribution from copying A-residues
@@ -335,19 +342,21 @@ def replicator_composition_propensity_envMutation1(rxn, CRS, concentrations, mu 
 	    
 	    for eA in range(0, nA + 1):
 	        #Here eA is the number of errors in copying A-residues
-	        binomialA = (math.factorial(nA)/(math.factorial(nA - eA)*math.factorial(eA)))
+	        binomialA = (math.factorial(nA)/(math.factorial(nA - eA)*math.factorial(eA)))*pow(reactant_concentrations[0], (nA - eA)/R_L)*pow(reactant_concentrations[1], eA/R_L)  #calculates number of sequences with eA errors in copying A and the resource contribution to these sequences
+
 	        for eB in range(0, nB + 1):
 	            # Here eB is the number of errors in copying B-residues
 	            if eA == 0 and eB == 0:
 	                # Keeps perfect copying probability seperate from copies made with errors
-	                q_p = pow(1 - mu, R_L)*(reactant_concentrations[0]*nA)*(reactant_concentrations[1]*nB)
+	                q_p = pow(1 - mu, R_L)*pow(reactant_concentrations[0], nA/R_L)*pow(reactant_concentrations[1], nB/R_L)
 	                
 	            else:
-	                binomialB = (math.factorial(nB)/(math.factorial(nB - eB)*math.factorial(eB))) #adds number of mutants with eB B-errors
-	                q_error += pow(mu, eA + eB)*pow(1 - mu, R_L - eA - eB)*binomialA*binomialB*( (reactant_concentrations[0]*(nA - eA +eB))  + (reactant_concentrations[1]*(nB - eB + eA) ) )
+	                binomialB = (math.factorial(nB)/(math.factorial(nB - eB)*math.factorial(eB)))*pow(reactant_concentrations[1], (nB - eB)/R_L )*pow(reactant_concentrations[0], eB/R_L) #adds number of mutants with eB B-errors
+	                
+	                q_error += pow(mu, eA + eB)*pow(1 - mu, R_L - eA - eB)*binomialA*binomialB
 
 	elif mu == 0:
-		q_p = pow(1 - mu, R_L)*(reactant_concentrations[0]*nA)*(reactant_concentrations[1]*nB)
+		q_p = pow(1 - mu, R_L)*pow(reactant_concentrations[0], nA/R_L)*pow(reactant_concentrations[1], nB/R_L)
 		q_error = 0
 
 	Ap = Ap*(q_p + q_error)*replicator_concentration 

@@ -200,7 +200,7 @@ def generate_all_replication1_reactions(length, rconstant = 0.001, sconstant = 1
 		reactant_coeff = [ s.count('A'), s.count('B') ]
 		products = [ molecule_dict[s] ]
 		product_coeff = [1]
-		reaction_list.append( CoreClasses.Reaction(rxn_ID, reactants = reactants, reactant_coeff = reactant_coeff, products = products, product_coeff = product_coeff, constant = rconstant, prop = 'RM2') )
+		reaction_list.append( CoreClasses.Reaction(rxn_ID, reactants = reactants, reactant_coeff = reactant_coeff, products = products, product_coeff = product_coeff, constant = rconstant, prop = 'RM1') )
 		#print 'Reaction List index: ', rxn_ID, 'Reaction ID: ', reaction_list[rxn_ID].ID 
 		rxn_IDs.append(rxn_ID)
 
